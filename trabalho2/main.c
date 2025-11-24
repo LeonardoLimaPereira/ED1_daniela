@@ -3,28 +3,33 @@
 #include <stdlib.h>
 #include "cliente.h"
 #include "fila.h"
+#include "atendimento.h"
 
 int main() {
     int opcao;
     char nome[50];
     int itens;
 
+    // Inicializa as filas de clientes
     Fila filaComum, filaPreferencial;
     
     inicializarFila(&filaComum);
     inicializarFila(&filaPreferencial);
 
+    // Inicializa o módulo de estatísticas e atendimento
+    Atendimento* a = inicializarAtendimento();
+
     do {
         printf("\n=================================\n");
         printf("    SISTEMA SUPERMERCADO   \n");
         printf("=================================\n");
-        printf("1 - Enfileirar cliente  - Comum\n");
-        printf("2 - Enfileirar cliente - Preferencial\n");
-        printf("3 - Desenfileirar cliente - Comum\n");
-        printf("4 - Desenfileirar cliente - Preferencial\n");
-        printf("5 - Exibir filas\n");
-        printf("6 - Estatisticas das filas\n");
-        printf("7 - Funcionalidades cliente\n");
+        printf("1 - Adicionar cliente na fila Comum\n");
+        printf("2 - Adicionar cliente na fila Preferencial\n");
+        printf("3 - Atender proximo cliente\n");
+        printf("4 - Exibir filas de espera\n");
+        printf("5 - Exibir clientes ja atendidos\n");
+        printf("6 - Exibir estatisticas finais\n");
+        printf("7 - Testar funcionalidades do cliente\n");
         printf("0 - Sair\n");
         printf("Escolha uma opcao: ");
         scanf("%d", &opcao);
@@ -63,52 +68,21 @@ int main() {
             }
 
             case 3:
-                if (filaVazia(&filaComum)) {
-                    printf("\nFila comum está vazia!\n");
-                } else {
-                    Cliente atendido = desenfileirar(&filaComum);
-                    printf("\nCliente atendido (Comum):\n");
-                    imprimirCliente(&atendido); // CORRETO: passa endereço
-                    printf("Tempo estimado: %d segundos\n", 
-                           calcularTempoAtendimento(atendido.itens));
-                }
+                atenderProximoCliente(&filaComum, &filaPreferencial, a);
                 break;
 
             case 4:
-                if (filaVazia(&filaPreferencial)) {
-                    printf("\nFila preferencial está vazia!\n");
-                } else {
-                    Cliente atendido = desenfileirar(&filaPreferencial);
-                    printf("\nCliente atendido (Preferencial):\n");
-                    imprimirCliente(&atendido); // CORRETO: passa endereço
-                    printf("Tempo estimado: %d segundos\n", 
-                           calcularTempoAtendimento(atendido.itens));
-                }
-                break;
-
-            case 5:
-                printf("\n=== EXIBIR FILAS ===\n");
+                printf("\n--- FILAS DE ESPERA ---\n");
                 exibirFila(&filaComum, "COMUM");
                 exibirFila(&filaPreferencial, "PREFERENCIAL");
                 break;
 
+            case 5:
+                exibirHistoricoAtendimentos(a);
+                break;
+
             case 6:
-                printf("\n=== ESTATÍSTICAS DAS FILAS ===\n");
-                printf("Fila Comum: %d clientes\n", filaComum.tamanho);
-                printf("Fila Preferencial: %d clientes\n", filaPreferencial.tamanho);
-                
-                int totalItens = 0;
-                NoFila* atual = filaComum.inicio;
-                while (atual != NULL) {
-                    totalItens += atual->cliente.itens;
-                    atual = atual->proximo;
-                }
-                atual = filaPreferencial.inicio;
-                while (atual != NULL) {
-                    totalItens += atual->cliente.itens;
-                    atual = atual->proximo;
-                }
-                printf("Total de itens nas filas: %d\n", totalItens);
+                exibirEstatisticasFinais(a);
                 break;
 
             case 7: {
@@ -125,6 +99,7 @@ int main() {
                 printf("\nSaindo...\n");
                 liberarFila(&filaComum);
                 liberarFila(&filaPreferencial);
+                liberarAtendimento(a);
                 break;
 
             default:
